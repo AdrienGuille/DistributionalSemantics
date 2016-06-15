@@ -48,12 +48,16 @@ class Corpus:
             feature = vocabulary[i][0]
             self.vocabulary.append(feature)
             self.vocabulary_map[feature] = i
+        print('      Corpus size: %d' % self.size)
         print('      Vocabulary size: %d' % len(self.vocabulary))
 
         # second pass to compute the co-occurrence matrix
 
         print('   Computing X (i.e. the co-occurrence frequency matrix)...')
-        self.X = dok_matrix((len(self.vocabulary), len(self.vocabulary)), dtype=np.short)
+        if decreasing_weighting:
+            self.X = dok_matrix((len(self.vocabulary), len(self.vocabulary)), dtype=np.float32)
+        else:
+            self.X = dok_matrix((len(self.vocabulary), len(self.vocabulary)), dtype=np.short)
         # go back to the beginning of the csv file
         input_file.seek(1)
         csv_reader = csv.reader(input_file, delimiter='\t')
@@ -77,8 +81,8 @@ class Corpus:
                         if self.vocabulary_map.get(context_left[j]) is not None:
                             column_index = self.vocabulary_map[context_left[j]]
                             # update co-occurrence count
-                            count = 0
-                            weight = 1
+                            count = .0
+                            weight = 1.
                             if decreasing_weighting:
                                 weight = len(context_left) - j
                             if (row_index, column_index) in self.X:
@@ -90,12 +94,11 @@ class Corpus:
                         if self.vocabulary_map.get(context_right[j]) is not None:
                             column_index = self.vocabulary_map[context_right[j]]
                             # update co-occurrence count
-                            count = 0
-                            weight = 1
+                            count = .0
+                            weight = 1.
                             if decreasing_weighting:
-                                weight = j
+                                weight = j + 1
                             if (row_index, column_index) in self.X:
                                 count = self.X[row_index, column_index]
-                            self.X[row_index, column_index] = count + 1 / weight
-        print('      Number of non-zero entries: %d' % self.X.getnnz())
-        self.X = self.X.tocsr()
+                            self.X[row_index, column_index] = count + 1. / weight
+        print('      Number of non-zero entries: %d (%f)' % (self.X.getnnz(), self.X.getnnz() / len(self.vocabulary)**2))
