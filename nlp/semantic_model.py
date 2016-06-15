@@ -59,6 +59,9 @@ class SemanticModel(object):
 
 
 class PPMI_SVD(SemanticModel):
+    """
+    PPMI+SVD (Positive Pointwise Mutual Information + truncated Singular Value Decomposition)
+    """
 
     def learn_vector_space(self, dimensions=100, k=0):
         self.dimensions = dimensions
@@ -72,6 +75,9 @@ class PPMI_SVD(SemanticModel):
 
 
 class COALS(SemanticModel):
+    """
+    COALS (Correlated Occurrence Analogue to Lexical Semantics)
+    """
 
     def learn_vector_space(self, dimensions=100):
         self.dimensions = dimensions
@@ -85,6 +91,9 @@ class COALS(SemanticModel):
 
 
 class GloVe(SemanticModel):
+    """
+    GloVe (Global Vectors for Word Representation)
+    """
 
     def __init__(self, corpus, x_max=100, alpha=0.75, gamma=0.05):
         super(GloVe, self).__init__(corpus)
@@ -115,7 +124,6 @@ class GloVe(SemanticModel):
             x_ij = entry[1]
             w_i = self.W_main[i, :]
             w_j = self.W_context[j, :]
-
             # calculate the weight related to x_ij
             f_x_ij = self.weighting_function(x_ij)
             # evaluate the local loss
@@ -123,14 +131,12 @@ class GloVe(SemanticModel):
             local_loss = f_x_ij * inner_local_loss
             # update the global loss
             global_cost += local_loss
-
             # update gradients for the W matrices
             grad_w_i = f_x_ij * inner_local_loss * w_j
             grad_w_j = f_x_ij * inner_local_loss * w_i
             # update gradients for the biases
             grad_b_i = f_x_ij * inner_local_loss
             grad_b_j = f_x_ij * inner_local_loss
-
             # update word vectors and biases in the opposite direction of gradients
             self.W_main[i, :] -= self.gamma * grad_w_i
             self.W_context[j, :] -= self.gamma * grad_w_j
@@ -145,7 +151,6 @@ class GloVe(SemanticModel):
         self.W_context = np.random.uniform(-bound, bound, [len(self.corpus.vocabulary), dimensions])
         self.b_main = np.random.uniform(-bound, bound, [len(self.corpus.vocabulary), 1])
         self.b_context = np.random.uniform(-bound, bound, [len(self.corpus.vocabulary), 1])
-
         # perform stochastic gradient descent
         for i in range(iterations):
             print(i)
