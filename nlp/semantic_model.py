@@ -3,11 +3,36 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from sklearn import decomposition
-from scipy import spatial, sparse, stats
+from scipy import sparse, stats
+
+from nlp import similarity
 
 
 __author__ = "Adrien Guille"
 __email__ = "adrien.guille@univ-lyon2.fr"
+
+
+def ppsc_transform(corpus):
+    """
+    This function transforms the raw co-occurrence frequency matrix with Positive Pairwise Squared Correlation (PPSC)
+    :param corpus: the corpus to be processed
+    :return: a corpus with the updated X matrix
+    """
+    n_r = len(corpus.vocabulary)
+    n_c = len(corpus.vocabulary)
+    X = sparse.dok_matrix((n_r, n_c), dtype=np.float32)
+    for i in range(n_r):
+        for j in range(n_c):
+            v_i = corpus.X[i, :].toarray()
+            v_j = corpus.X[j, :].toarray()
+            correlation = stats.pearsonr(v_i[0, :], v_j[0, :])[0]
+            if correlation < 0:
+                correlation = 0
+            else:
+                correlation = np.sqrt(correlation)
+            X[i, j] = correlation
+    corpus.X = X
+    return corpus
 
 
 def ppmi_transform(corpus, k=0):
@@ -42,36 +67,6 @@ def ppmi_transform(corpus, k=0):
     return corpus
 
 
-def jaccard_similarity(x, y):
-    """
-    This function calculates the Generalized Jaccard similarity measure of two real vectors of the same length
-    :param x: a word vector
-    :param y: a word vector
-    :return: a real value in [0;1]
-    """
-    n = len(x)
-    sum_min = .0
-    sum_max = .0
-    for i in range(0, n):
-        sum_min += min(x[i], y[i])
-        sum_max += max(x[i], y[i])
-    return sum_min / sum_max
-
-
-def cosine_similarity(x, y):
-    """
-    This function calculates the Cosine similarity measure of two real vectors of the same length
-    :param x: a word vector
-    :param y: a word vector
-    :return: a real value in [0;1]
-    """
-    return 1 - spatial.distance.cosine(x, y)
-
-
-def rand(a, b):
-    return np.random.randn(a, b).astype('f')
-
-
 class SemanticModel(object):
     __metaclass__ = ABCMeta
 
@@ -98,15 +93,20 @@ class SemanticModel(object):
         else:
             raise ValueError('Vector space undefined')
 
-    def most_similar_words(self, word, nb_words=3, similarity_measure='cosine'):
-        similarity = []
+    def most_similar_words(self, word, nb_words=5, similarity_measure='cosine'):
+        sim = []
+        similarity_function = None
         if self.corpus.vocabulary_map.get(word) is not None:
             if similarity_measure not in ('cosine', 'jaccard'):
                 raise ValueError("'similarity_measure' can only be either 'cosine or 'jaccard'")
+            elif similarity_measure == 'cosine':
+                similarity_function = similarity.cosine
+            elif similarity_measure == 'jaccard':
+                similarity_function = similarity.jaccard
             word_vector = self.vector_for_word(word)
             for i in range(len(self.corpus.vocabulary)):
-                similarity.append(spatial.distance.cosine(word_vector, self.vector_for_id(i)))
-            similar_word_ids = np.argsort(np.array(similarity)).tolist()
+                sim.append(similarity_function(word_vector, self.vector_for_id(i)))
+            similar_word_ids = np.argsort(np.array(sim)).tolist()[::-1]
             similar_words = []
             for j in range(0, nb_words):
                 this_word = self.corpus.vocabulary[similar_word_ids[j]]
@@ -123,6 +123,19 @@ class PPMI_SVD(SemanticModel):
         # apply PPMI transformation on X
         print('   Applying PPMI transformation on X...')
         self.corpus = ppmi_transform(self.corpus, k)
+        # compute truncated SVD
+        print('   Computing truncated SVD...')
+        svd = decomposition.TruncatedSVD(n_components=dimensions)
+        self.vector_space = svd.fit_transform(self.corpus.X)
+
+
+class COALS(SemanticModel):
+
+    def learn_vector_space(self, dimensions=100):
+        self.dimensions = dimensions
+        # apply PPSC transformation on X
+        print('   Applying PPSC transformation on X...')
+        self.corpus = ppsc_transform(self.corpus)
         # compute truncated SVD
         print('   Computing truncated SVD...')
         svd = decomposition.TruncatedSVD(n_components=dimensions)
