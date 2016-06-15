@@ -55,13 +55,13 @@ class Corpus:
         print('   Computing X (i.e. the co-occurrence frequency matrix)...')
         self.X = dok_matrix((len(self.vocabulary), len(self.vocabulary)), dtype=np.short)
         # go back to the beginning of the csv file
-        input_file.seek(0)
+        input_file.seek(1)
         csv_reader = csv.reader(input_file, delimiter='\t')
         for line in csv_reader:
             words = tokenize(line[text_column_index])
             nb_words = len(words)
             for i in range(nb_words):
-                # check if the current word is part of the vocabulary
+                # check whether the current word is part of the vocabulary or not
                 if self.vocabulary_map.get(words[i]) is not None:
                     row_index = self.vocabulary_map[words[i]]
                     # extract surrounding words w.r.t window size
@@ -87,8 +87,8 @@ class Corpus:
                     # scan right context
                     context_right = words[i + 1:end + 1]
                     for j in range(0, len(context_right)):
-                        if self.vocabulary_map.get(context_left[j]) is not None:
-                            column_index = self.vocabulary_map[context_left[j]]
+                        if self.vocabulary_map.get(context_right[j]) is not None:
+                            column_index = self.vocabulary_map[context_right[j]]
                             # update co-occurrence count
                             count = 0
                             weight = 1
