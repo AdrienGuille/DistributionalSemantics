@@ -31,7 +31,7 @@ elif method == 'COALS':
     elapsed = timeit.default_timer() - start_time
     print('Vector space learned in %f seconds.' % elapsed)
 elif method == 'GloVe':
-    print('Learning vector space with Glove...')
+    print('Learning vector space with GloVe...')
     start_time = timeit.default_timer()
     my_semantic_model = GloVe(my_corpus)
     my_semantic_model.learn_vector_space(dimensions=100)

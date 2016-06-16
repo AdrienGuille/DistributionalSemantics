@@ -13,7 +13,7 @@ As of now, this library offers functions for:
 ### Learning vector space representations of words
 - PPMI+SVD
 - COALS
-- GloVe (with classical stochastic gradient descent instead of AdaGrad)
+- GloVe (with regular stochastic gradient descent instead of AdaGrad)
     
 ### Measuring semantic similarity between words
 - Cosine

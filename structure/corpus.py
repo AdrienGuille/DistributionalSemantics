@@ -1,7 +1,10 @@
 # coding: utf-8
+
+# standard
 import csv
 import string
 
+# math
 from scipy.sparse import dok_matrix
 import numpy as np
 
@@ -18,12 +21,13 @@ def tokenize(text):
 
 class Corpus:
     def __init__(self, source_file_path, max_nb_features=10000, window_size=5, decreasing_weighting=False):
-        input_file = open(source_file_path)
+        input_file = open(source_file_path, 'r')
         csv_reader = csv.reader(input_file, delimiter='\t')
         header = next(csv_reader)
         text_column_index = header.index('text')
 
         # first pass to identify features, i.e. the vocabulary
+
         print('   Identifying features (i.e. the vocabulary)...')
         self.size = 0
         word_frequency = {}
@@ -55,6 +59,7 @@ class Corpus:
 
         print('   Computing X (i.e. the co-occurrence frequency matrix)...')
         if decreasing_weighting:
+
             self.X = dok_matrix((len(self.vocabulary), len(self.vocabulary)), dtype=np.float32)
         else:
             self.X = dok_matrix((len(self.vocabulary), len(self.vocabulary)), dtype=np.short)

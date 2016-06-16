@@ -1,9 +1,14 @@
 # coding: utf-8
+
+# local
+from nlp import similarity, transformation
+
+# standard
 from abc import ABCMeta, abstractmethod
+
+# math
 import numpy as np
 from sklearn import decomposition
-from nlp import similarity, transformation
-from random import shuffle
 
 __author__ = "Adrien Guille"
 __email__ = "adrien.guille@univ-lyon2.fr"
@@ -18,7 +23,7 @@ class SemanticModel(object):
         self.dimensions = None
 
     @abstractmethod
-    def learn_vector_space(self, dimension=100):
+    def learn_vector_space(self):
         pass
 
     def vector_for_id(self, word_id):
@@ -35,7 +40,22 @@ class SemanticModel(object):
         else:
             raise ValueError('Vector space undefined')
 
-    def most_similar_words(self, word, nb_words=5, similarity_measure='cosine'):
+    def measure_similarity(self, word_1, word_2, similarity_measure='cosine', binary=False):
+        similarity_function = None
+        if similarity_measure not in ('cosine', 'jaccard'):
+            raise ValueError("'similarity_measure' can only be either 'cosine or 'jaccard'")
+        elif similarity_measure == 'cosine':
+            similarity_function = similarity.cosine
+        elif similarity_measure == 'jaccard':
+            similarity_function = similarity.jaccard
+        word_1_vector = self.vector_for_word(word_1)
+        word_2_vector = self.vector_for_word(word_2)
+        if binary:
+            word_1_vector = similarity.get_binary_vector(word_1_vector)
+            word_2_vector = similarity.get_binary_vector(word_2_vector)
+        return similarity_function(word_1_vector, word_2_vector)
+
+    def most_similar_words(self, word, nb_words=5, similarity_measure='cosine', binary=False):
         sim = []
         similarity_function = None
         if self.corpus.vocabulary_map.get(word) is not None:
@@ -46,8 +66,13 @@ class SemanticModel(object):
             elif similarity_measure == 'jaccard':
                 similarity_function = similarity.jaccard
             word_vector = self.vector_for_word(word)
+            if binary:
+                word_vector = similarity.get_binary_vector(word_vector)
             for i in range(len(self.corpus.vocabulary)):
-                sim.append(similarity_function(word_vector, self.vector_for_id(i)))
+                this_word_vector = self.vector_for_id(i)
+                if binary:
+                    this_word_vector = similarity.get_binary_vector(this_word_vector)
+                sim.append(similarity_function(word_vector, this_word_vector))
             similar_word_ids = np.argsort(np.array(sim)).tolist()[::-1]
             similar_words = []
             for j in range(0, nb_words):
@@ -61,6 +86,7 @@ class SemanticModel(object):
 class PPMI_SVD(SemanticModel):
     """
     PPMI+SVD (Positive Pointwise Mutual Information + truncated Singular Value Decomposition)
+    John A. Bullinaria and Joseph P. Levy BRM 39(3) 2007
     """
 
     def learn_vector_space(self, dimensions=100, k=0):
@@ -77,6 +103,7 @@ class PPMI_SVD(SemanticModel):
 class COALS(SemanticModel):
     """
     COALS (Correlated Occurrence Analogue to Lexical Semantics)
+    Douglas L. T. Rhodes et al. CACM 8(10) 2006
     """
 
     def learn_vector_space(self, dimensions=100):
@@ -93,6 +120,7 @@ class COALS(SemanticModel):
 class GloVe(SemanticModel):
     """
     GloVe (Global Vectors for Word Representation)
+    Jeffrey Pennington et al. EMNLP 2014
     """
 
     def __init__(self, corpus, x_max=100, alpha=0.75, gamma=0.05):
@@ -116,7 +144,7 @@ class GloVe(SemanticModel):
         global_cost = 0
         # randomly shuffle entries
         entries = list(self.corpus.X.items())
-        shuffle(entries)
+        np.random.shuffle(entries)
         # loop through all the entries, compute gradients and update word vectors and biases
         for entry in entries:
             i = entry[0][0]
@@ -128,7 +156,7 @@ class GloVe(SemanticModel):
             f_x_ij = self.weighting_function(x_ij)
             # evaluate the local loss
             inner_local_loss = np.dot(w_i, w_j) + self.b_main[i] + self.b_context[j] - np.log(x_ij)
-            local_loss = f_x_ij * inner_local_loss
+            local_loss = f_x_ij * inner_local_loss ** 2
             # update the global loss
             global_cost += local_loss
             # update gradients for the W matrices
