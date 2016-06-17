@@ -7,8 +7,8 @@ This is a WIP Python 3 library of functions for learning vector space representa
 As of now, this library offers functions for:
 
 ### Processing corpora
-- Vocabulary
-- Word-word co-occurrence matrix (with or without decreasing weighting)
+- Feature selection
+- Co-occurrence matrix (with or without decreasing weighting)
     
 ### Learning vector space representations of words
 - PPMI+SVD
@@ -18,6 +18,15 @@ As of now, this library offers functions for:
 ### Measuring semantic similarity between words
 - Cosine
 - Generalized Jaccard
+
+### Evaluating semantic models on a word similarity task
+- Ground truth
+    - WordSim-353
+    - MC
+    - RG
+- Correlation
+    - Pearson
+    - Spearman
 
 ## Requirements
 
