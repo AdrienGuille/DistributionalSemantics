@@ -2,7 +2,6 @@
 from structure.corpus import Corpus
 from nlp.semantic_model import PPMI_SVD, COALS, GloVe
 import timeit
-import pickle
 
 __authors__ = "Adrien Guille"
 __email__ = "adrien.guille@univ-lyon2.fr"
@@ -39,10 +38,6 @@ elif method == 'GloVe':
     print('Vector space learned in %f seconds.' % elapsed)
 else:
     raise ValueError('Unknown method "%s"' % method)
-
-save = input('Save model on disk? (y/n): ')
-if save == 'y':
-    pickle.dump(my_semantic_model, open('my_semantic_model.pickle', 'wb'))
 
 on = True
 while on:
