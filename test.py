@@ -8,7 +8,7 @@ __email__ = "adrien.guille@univ-lyon2.fr"
 
 print('Loading corpus...')
 start_time = timeit.default_timer()
-my_corpus = Corpus('input/messages1.csv', max_nb_features=500, window_size=5, decreasing_weighting=True)
+my_corpus = Corpus('data/messages3.csv', max_nb_features=50000, window_size=5, decreasing_weighting=True)
 elapsed = timeit.default_timer() - start_time
 print('Corpus loaded in %f seconds.' % elapsed)
 
