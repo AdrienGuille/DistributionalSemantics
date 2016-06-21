@@ -41,14 +41,11 @@ def ppmi(corpus, k=0):
     if k < 0:
         k = 0
     n_r = len(corpus.vocabulary)
-    n_c = len(corpus.vocabulary)
+    n_c = n_r
     X = sparse.dok_matrix((n_r, n_c), dtype=np.float32)
-    total_f_ij = 0
-    for i in range(n_r):
-        for j in range(n_c):
-            total_f_ij += corpus.X[i, j] + k
-    for i in range(n_r):
-        for j in range(n_c):
+    total_f_ij = corpus.X.sum() + k * n_r * n_c
+    for i in range(0, n_r):
+        for j in range(0, i):
             p_ij = (corpus.X[i, j] + k) / total_f_ij
             p_i = (corpus.X[i, :].sum() + n_c * k) / total_f_ij
             p_j = (corpus.X[:, j].sum() + n_r * k) / total_f_ij
@@ -58,6 +55,11 @@ def ppmi(corpus, k=0):
                     pmi_ij = 0
             else:
                 pmi_ij = 0
-            X[i, j] = pmi_ij
+            if pmi_ij > 0:
+                X[i, j] = pmi_ij
+    for i in range(0, n_r):
+        for j in range(i, n_c):
+            if X[j, i] > 0:
+                X[i, j] = X[j, i]
     corpus.X = X
     return corpus
