@@ -16,7 +16,7 @@ def tokenize(text):
     # split the documents into tokens based on whitespaces
     raw_tokens = text.split()
     # trim punctuation and convert to lower case
-    return [token.strip(string.punctuation).lower() for token in raw_tokens]
+    return [token.strip(string.punctuation).lower() for token in raw_tokens if len(token) > 1]
 
 
 class Corpus:
@@ -106,4 +106,5 @@ class Corpus:
                                 if (row_index, column_index) in self.X:
                                     count = self.X[row_index, column_index]
                                 self.X[row_index, column_index] = count + 1. / weight
+            self.X = self.X.tocoo()
             print('      Number of non-zero entries: %d (%f)' % (self.X.getnnz(), self.X.getnnz() / len(self.vocabulary)**2))
