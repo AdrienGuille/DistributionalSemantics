@@ -21,7 +21,7 @@ def tokenize(text):
 
 class Corpus:
 
-    def __init__(self, source_file_path, max_nb_features=10000, window_size=5, decreasing_weighting=False):
+    def __init__(self, source_file_path, nb_features=10000, window_size=5, decreasing_weighting=False):
         with open(source_file_path, 'r') as input_file:
             csv_reader = csv.reader(input_file, delimiter='\t')
             header = next(csv_reader)
@@ -49,7 +49,7 @@ class Corpus:
             self.vocabulary = []
             self.vocabulary_map = {}
             # construct the structures
-            for i in range(min(max_nb_features, len(vocabulary))):
+            for i in range(min(nb_features, len(vocabulary))):
                 feature = vocabulary[i][0]
                 self.vocabulary.append(feature)
                 self.vocabulary_map[feature] = i
