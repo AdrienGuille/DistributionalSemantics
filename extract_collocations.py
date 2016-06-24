@@ -18,6 +18,7 @@ if __name__ == '__main__':
     print('Loading pickled corpus...')
     start_time = timeit.default_timer()
     my_corpus = pickle.load(open(args.i, 'rb'))
+    my_corpus.X = my_corpus.X.tocsr()
     print('   Corpus size: %d\n   Vocabulary size: %d' % (my_corpus.size, len(my_corpus.vocabulary)))
     elapsed = timeit.default_timer() - start_time
     print('Corpus loaded in %f seconds.' % elapsed)
