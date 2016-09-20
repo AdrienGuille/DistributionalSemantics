@@ -23,4 +23,4 @@ if __name__ == '__main__':
     my_corpus = Corpus(args.i, nb_features=args.nf, window_size=args.ws, decreasing_weighting=args.dw)
     elapsed = timeit.default_timer() - start_time
     print('Corpus loaded in %f seconds.' % elapsed)
-    pickle.dump(my_corpus, open(args.o, 'wb'))
+    pickle.dump(my_corpus.X, open(args.o, 'wb'))
